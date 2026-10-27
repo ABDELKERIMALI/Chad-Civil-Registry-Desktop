@@ -12,19 +12,11 @@ datas = [
 binaries = []
 hiddenimports = []
 
+# Explicit imports for pywebview's Windows backend
+hiddenimports += ['clr', 'pythonnet', 'clr_loader']
+
 # Collect pywebview and its dependencies
 tmp_ret = collect_all('webview')
-datas += tmp_ret[0]
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
-
-# Collect Python.NET dependencies used by the Windows Forms backend
-tmp_ret = collect_all('pythonnet')
-datas += tmp_ret[0]
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
-
-tmp_ret = collect_all('clr_loader')
 datas += tmp_ret[0]
 binaries += tmp_ret[1]
 hiddenimports += tmp_ret[2]
