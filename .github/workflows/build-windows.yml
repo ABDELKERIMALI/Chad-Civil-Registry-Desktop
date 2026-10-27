@@ -33,7 +33,22 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pyinstaller
           python --version
-          python -m pip show pywebview pythonnet clr_loader pyinstaller
+          python -m pip show Flask PyInstaller
+
+      - name: Verify application files
+        shell: pwsh
+        run: |
+          if (!(Test-Path "desktop.py")) {
+            throw "desktop.py was not found."
+          }
+
+          if (!(Test-Path "ChadCivilRegistry.spec")) {
+            throw "PyInstaller spec file was not found."
+          }
+
+          if (!(Test-Path "app/static/images/chad-civil-registry.ico")) {
+            throw "Application icon was not found."
+          }
 
       - name: Build Windows application
         run: |

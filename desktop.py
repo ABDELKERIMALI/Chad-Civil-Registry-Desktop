@@ -4,7 +4,8 @@ import sys
 import time
 import threading
 import secrets
-import webview
+import socket
+import webbrowser
 
 from pathlib import Path
 from flask import redirect, url_for
@@ -24,9 +25,12 @@ def get_data_dir():
 
 
 DATA_DIR = get_data_dir()
-os.environ["DATABASE_URL"] = f"sqlite:///{(DATA_DIR / 'civil_registry.db').as_posix()}"
+os.environ["DATABASE_URL"] = (
+    f"sqlite:///{(DATA_DIR / 'civil_registry.db').as_posix()}"
+)
 
 secret_file = DATA_DIR / "secret_key"
+
 if secret_file.exists():
     secret_key = secret_file.read_text(encoding="utf-8").strip()
 else:
@@ -48,7 +52,7 @@ def run_server():
         db.create_all()
 
     app.run(
-        host="0.0.0.0",
+        host=HOST,
         port=PORT,
         debug=False,
         use_reloader=False,
@@ -56,27 +60,52 @@ def run_server():
     )
 
 
-if __name__ == "__main__":
-    server_thread = threading.Thread(target=run_server, daemon=True)
-    server_thread.start()
-
+def wait_for_server(url, timeout=15):
     import urllib.request
 
-    url = f"http://{HOST}:{PORT}/"
-    for _ in range(50):
+    deadline = time.time() + timeout
+
+    while time.time() < deadline:
         try:
             with urllib.request.urlopen(url, timeout=1):
-                break
+                return True
         except Exception:
-            time.sleep(0.2)
-    else:
-        raise RuntimeError("Flask server failed to start on port 5000.")
+            time.sleep(0.3)
 
-    webview.create_window(
-        APP_NAME,
-        url,
-        width=1280,
-        height=800,
-        min_size=(900, 600),
+    return False
+
+
+def main():
+    # Avoid starting a second copy on the same port.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.bind((HOST, PORT))
+        except OSError:
+            print(
+                f"{APP_NAME} may already be running on port {PORT}."
+            )
+            webbrowser.open(f"http://{HOST}:{PORT}/")
+            return
+
+    server_thread = threading.Thread(
+        target=run_server,
+        daemon=True,
     )
-    webview.start()
+    server_thread.start()
+
+    url = f"http://{HOST}:{PORT}/"
+
+    if not wait_for_server(url):
+        raise RuntimeError(
+            f"{APP_NAME} could not start. "
+            f"Check whether port {PORT} is already in use."
+        )
+
+    webbrowser.open(url)
+
+    # Keep the launcher alive while the server is running.
+    server_thread.join()
+
+
+if __name__ == "__main__":
+    main()

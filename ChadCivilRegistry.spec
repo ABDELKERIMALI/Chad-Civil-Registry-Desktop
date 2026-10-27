@@ -3,7 +3,7 @@
 
 from PyInstaller.utils.hooks import collect_all
 
-# Application files
+# Application templates and static assets
 datas = [
     ('app/templates', 'app/templates'),
     ('app/static', 'app/static'),
@@ -12,16 +12,7 @@ datas = [
 binaries = []
 hiddenimports = []
 
-# Explicit imports for pywebview's Windows backend
-hiddenimports += ['clr', 'pythonnet', 'clr_loader']
-
-# Collect pywebview and its dependencies
-tmp_ret = collect_all('webview')
-datas += tmp_ret[0]
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
-
-# Collect Flask dependencies
+# Collect Flask dependencies and their required files
 for package in [
     'flask',
     'flask_sqlalchemy',
@@ -44,7 +35,12 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        'webview',
+        'pythonnet',
+        'clr',
+        'clr_loader',
+    ],
     noarchive=False,
     optimize=0,
 )
@@ -57,6 +53,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='ChadCivilRegistry',
+    icon='app/static/images/chad-civil-registry.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

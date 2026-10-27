@@ -16,6 +16,3 @@ python-dotenv==1.0.0
 email-validator==2.1.0
 arabic-reshaper 
 python-bidi
-pywebview==6.2.1
-pythonnet==3.0.5
-clr_loader==0.2.7
